@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="ht">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ann al chache Wayòm nan - Viv entansyonèlman Wayòm nan</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;900&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Firebase SDK (v10) -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getDatabase, ref, set, onValue, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+        const firebaseConfig = {
+            databaseURL: "https://laulyalunch-default-rtdb.firebaseio.com/"
+        };
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        window.FB_DB = db;
+        window.FB_Ref = ref;
+        window.FB_Set = set;
+        window.FB_OnValue = onValue;
+        window.FB_Update = update;
+        window.isFirebaseReady = true;
+    </script>
+
+    <style>
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-color: #1c140c;
+            color: #f3f4f6;
+            overflow-x: hidden;
+            user-select: none;
+        }
+        .title-font { font-family: 'Cinzel', serif; }
+        
+        /* FOND VIL ANTIK (EPOK JEZU) */
+        .real-map-bg {
+            background-image: linear-gradient(to bottom, rgba(28, 20, 12, 0.8), rgba(28, 20, 12, 0.9)), url('https://images.unsplash.com/photo-1548013146-72479768bada?q=80&w=1000&auto=format&fit=crop');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+        }
+
+        .city-card-unlocked {
+            background-image: linear-gradient(to bottom, rgba(0,0,0,0.3), rgba(0,0,0,0.85)), url('https://images.unsplash.com/photo-1548013146-72479768bada?q=80&w=400&auto=format&fit=crop');
+            background-size: cover;
+            background-position: center;
+            border: 3px solid #d97706;
+            box-shadow: 0 12px 25px rgba(0, 0, 0, 0.9), 0 0 15px rgba(217, 119, 6, 0.4);
+            transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .city-card-unlocked:hover {
+            transform: scale(1.08) translateY(-4px);
+            box-shadow: 0 18px 30px rgba(217, 119, 6, 0.6);
+        }
+
+        .city-card-locked {
+            background-image: linear-gradient(to bottom, rgba(0,0,0,0.7), rgba(0,0,0,0.95)), url('https://images.unsplash.com/photo-1548013146-72479768bada?q=80&w=400&auto=format&fit=crop');
+            background-size: cover;
+            background-position: center;
+            border: 2px solid #451a03;
+            opacity: 0.65;
+            filter: grayscale(90%) brightness(0.5);
+        }
+
+        @keyframes float-pin {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+        .google-pin { animation: float-pin 1.5s infinite ease-in-out; }
+
+        .option-selected { border-color: #d97706 !important; background-color: rgba(217, 119, 6, 0.2) !important; }
+
+        @keyframes gentle-float {
+            0%, 100% { transform: translateY(0px) scale(1); }
+            50% { transform: translateY(-6px) scale(1.03); }
+        }
+        .gif-animated { animation: gentle-float 2s infinite ease-in-out; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center pb-28">
+
+    <!-- Screen de Login (Gif Zwazo / Lapè) -->
+    <div id="login-screen" class="fixed inset-0 bg-stone-950 z-50 flex items-center justify-center p-4">
+        <div class="bg-stone-900 border border-amber-900/60 w-full max-w-sm rounded-3xl p-6 shadow-2xl text-center space-y-6">
+            <div class="flex justify-center relative">
+                <img class="w-28 h-28 object-contain rounded-full border-2 border-amber-400 p-1 bg-amber-950/40 gif-animated shadow-2xl" src="https://media.giphy.com/media/26AHONQ79FdWZhAI0/giphy.gif" alt="Byenveni nan Wayòm nan">
+            </div>
+            <div>
+                <h2 class="text-2xl font-black title-font text-amber-400">Ann al chache Wayòm nan</h2>
+                <p class="text-stone-300 text-xs mt-1">Byenveni nan vwayaj la nan epok antik la! Antre non ou pou nou kòmanse!</p>
+            </div>
+            <div class="space-y-3 text-left">
+                <label class="text-xs font-bold text-amber-300">Non ou:</label>
+                <input type="text" id="username-input" placeholder="Egzanp: Jean Michel" class="w-full px-4 py-3 bg-stone-800 border border-stone-700 rounded-2xl text-stone-100 font-bold focus:outline-none focus:border-amber-500">
+            </div>
+            <button onclick="handleLogin()" class="w-full py-3 bg-amber-600 hover:bg-amber-700 text-stone-950 font-black rounded-2xl shadow-lg border-b-4 border-amber-900 cursor-pointer transition-all active:scale-95">
+                Kòmanse Vwayaj la 🚀
+            </button>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <header class="w-full max-w-md bg-stone-900/95 backdrop-blur border-b border-amber-900/40 sticky top-0 z-40 px-3 py-2 flex items-center justify-between shadow-xl">
+        <div class="flex items-center space-x-2 text-xs font-extrabold">
+            <span class="text-orange-400">🔥 <span id="streak-count">1</span></span>
+            <span class="text-blue-400">💎 <span id="gems-count">50</span></span>
+            <span class="text-amber-400">⚡ <span id="xp-count">0</span></span>
+            <span class="text-red-500 cursor-pointer" onclick="openShopModal()">❤️ <span id="hearts-count">3</span></span>
+        </div>
+        <div class="flex items-center space-x-2 bg-stone-800/80 px-2.5 py-1 rounded-xl">
+            <p id="display-username" class="text-amber-300 font-black text-xs truncate max-w-[80px]">Itilizatè</p>
+            <button onclick="handleLogout()" class="text-stone-400 hover:text-red-400 text-xs cursor-pointer">🚪</button>
+        </div>
+    </header>
+
+    <!-- Tit ak Moun Anliy -->
+    <div class="w-full max-w-md bg-gradient-to-b from-amber-950 to-stone-900 text-amber-100 px-6 py-4 shadow-lg border-b-2 border-amber-700/50 text-center">
+        <h1 class="text-xl font-black tracking-widest title-font text-amber-400">Ann al chache Wayòm nan</h1>
+        <p class="text-amber-200/80 text-xs mt-0.5 font-semibold">Viv entansyonèlman nan Epok Antik la</p>
+        <div class="mt-2 pt-2 border-t border-amber-800/40 flex items-center justify-center gap-1 flex-wrap text-[11px]">
+            <span class="text-stone-400">Jwè an dirèk:</span>
+            <div id="online-players-container" class="flex flex-wrap gap-1">
+                <span class="text-emerald-400">🟢 Chèche koneksyon...</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- KAT VIL ANTIK -->
+    <main class="w-full max-w-md px-4 py-10 flex flex-col items-center relative real-map-bg min-h-[2500px] shadow-2xl border-x border-stone-900 space-y-16">
+        <svg class="absolute top-0 left-0 w-full h-full pointer-events-none z-0" viewBox="0 0 400 2500" fill="none">
+            <path d="M 200 80 Q 320 250, 200 420 Q 80 590, 200 760 Q 320 930, 200 1100 Q 80 1270, 200 1440 Q 320 1610, 200 1780 Q 80 1950, 200 2120 Q 320 2290, 200 2420" stroke="#78350f" stroke-width="20" stroke-linecap="round" opacity="0.6"/>
+            <path d="M 200 80 Q 320 250, 200 420 Q 80 590, 200 760 Q 320 930, 200 1100 Q 80 1270, 200 1440 Q 320 1610, 200 1780 Q 80 1950, 200 2120 Q 320 2290, 200 2420" stroke="#f59e0b" stroke-width="4" stroke-linecap="round" stroke-dasharray="10 10"/>
+        </svg>
+
+        <div class="w-full flex justify-center z-10 relative">
+            <div id="node-1-btn" onclick="openLessonModal(1)" class="city-card-unlocked relative w-40 h-28 rounded-2xl flex flex-col items-center justify-between p-2 cursor-pointer">
+                <div class="absolute -top-6 text-red-500 text-2xl google-pin">📍</div>
+                <div class="bg-stone-900/80 backdrop-blur-sm px-2 py-0.5 rounded-full border border-amber-500 text-[9px] font-black text-amber-300">Vil Antik</div>
+                <div class="bg-stone-950/90 w-full rounded-lg text-center py-1 border border-amber-600/50">
+                    <span class="block text-[11px] font-black text-amber-300">1. Bèthléem</span>
+                    <span class="block text-[8px] text-stone-400 font-bold">(Matye)</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="w-full flex justify-end pr-6 z-10 relative">
+            <div id="node-2-btn" onclick="openLessonModal(2)" class="city-card-locked relative w-40 h-28 rounded-2xl flex flex-col items-center justify-between p-2 cursor-not-allowed">
+                <div></div>
+                <div class="bg-stone-950/90 w-full rounded-lg text-center py-1 border border-stone-800">
+                    <span class="block text-[11px] font-black text-stone-400">2. Galilée</span>
+                    <span class="block text-[8px] text-stone-500 font-bold">(Mak)</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="w-full flex justify-start pl-6 z-10 relative">
+            <div id="node-3-btn" onclick="openLessonModal(3)" class="city-card-locked relative w-40 h-28 rounded-2xl flex flex-col items-center justify-between p-2 cursor-not-allowed">
+                <div></div>
+                <div class="bg-stone-950/90 w-full rounded-lg text-center py-1 border border-stone-800">
+                    <span class="block text-[11px] font-black text-stone-400">3. Nazarèt</span>
+                    <span class="block text-[8px] text-stone-500 font-bold">(Lik)</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="w-full flex justify-center z-10 relative">
+            <div id="node-4-btn" onclick="openLessonModal(4)" class="city-card-locked relative w-40 h-28 rounded-2xl flex flex-col items-center justify-between p-2 cursor-not-allowed">
+                <div></div>
+                <div class="bg-stone-950/90 w-full rounded-lg text-center py-1 border border-stone-800">
+                    <span class="block text-[11px] font-black text-stone-400">4. Jerizalèm</span>
+                    <span class="block text-[8px] text-stone-500 font-bold">(Jan)</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="w-full flex justify-end pr-6 z-10 relative">
+            <div id="node-5-btn" onclick="openLessonModal(5)" class="city-card-locked relative w-40 h-28 rounded-2xl flex flex-col items-center justify-between p-2 cursor-not-allowed">
+                <div></div>
+                <div class="bg-stone-950/90 w-full rounded-lg text-center py-1 border border-stone-800">
+                    <span class="block text-[11px] font-black text-stone-400">5. Kapènawoum</span>
+                    <span class="block text-[8px] text-stone-500 font-bold">(Matye)</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="w-full flex justify-start pl-6 z-10 relative">
+            <div id="node-6-btn" onclick="openLessonModal(6)" class="city-card-locked relative w-40 h-28 rounded-2xl flex flex-col items-center justify-between p-2 cursor-not-allowed">
+                <div></div>
+                <div class="bg-stone-950/90 w-full rounded-lg text-center py-1 border border-stone-800">
+                    <span class="block text-[11px] font-black text-stone-400">6. Bètani</span>
+                    <span class="block text-[8px] text-stone-500 font-bold">(Mak)</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="w-full flex justify-center z-10 relative">
+            <div id="node-7-btn" onclick="openLessonModal(7)" class="city-card-locked relative w-40 h-28 rounded-2xl flex flex-col items-center justify-between p-2 cursor-not-allowed">
+                <div></div>
+                <div class="bg-stone-950/90 w-full rounded-lg text-center py-1 border border-stone-800">
+                    <span class="block text-[11px] font-black text-stone-400">7. Jeriko</span>
+                    <span class="block text-[8px] text-stone-500 font-bold">(Lik)</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="w-full flex justify-end pr-6 z-10 relative">
+            <div id="node-8-btn" onclick="openLessonModal(8)" class="city-card-locked relative w-40 h-28 rounded-2xl flex flex-col items-center justify-between p-2 cursor-not-allowed">
+                <div></div>
+                <div class="bg-stone-950/90 w-full rounded-lg text-center py-1 border border-stone-800">
+                    <span class="block text-[11px] font-black text-stone-400">8. Kana</span>
+                    <span class="block text-[8px] text-stone-500 font-bold">(Jan)</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="w-full flex justify-start pl-6 z-10 relative">
+            <div id="node-9-btn" onclick="openLessonModal(9)" class="city-card-locked relative w-40 h-28 rounded-2xl flex flex-col items-center justify-between p-2 cursor-not-allowed">
+                <div></div>
+                <div class="bg-stone-950/90 w-full rounded-lg text-center py-1 border border-stone-800">
+                    <span class="block text-[11px] font-black text-stone-400">9. Tòb</span>
+                    <span class="block text-[8px] text-stone-500 font-bold">(Matye)</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="w-full flex justify-center z-10 relative">
+            <div id="node-10-btn" onclick="openLessonModal(10)" class="city-card-locked relative w-40 h-28 rounded-2xl flex flex-col items-center justify-between p-2 cursor-not-allowed">
+                <div></div>
+                <div class="bg-stone-950/90 w-full rounded-lg text-center py-1 border border-stone-800">
+                    <span class="block text-[11px] font-black text-stone-400">10. Emis</span>
+                    <span class="block text-[8px] text-stone-500 font-bold">(Mak)</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="w-full flex justify-end pr-6 z-10 relative">
+            <div id="node-11-btn" onclick="openLessonModal(11)" class="city-card-locked relative w-40 h-28 rounded-2xl flex flex-col items-center justify-between p-2 cursor-not-allowed">
+                <div></div>
+                <div class="bg-stone-950/90 w-full rounded-lg text-center py-1 border border-stone-800">
+                    <span class="block text-[11px] font-black text-stone-400">11. Samari</span>
+                    <span class="block text-[8px] text-stone-500 font-bold">(Lik)</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="w-full flex justify-center z-10 relative">
+            <div id="node-12-btn" onclick="openLessonModal(12)" class="city-card-locked relative w-40 h-28 rounded-2xl flex flex-col items-center justify-between p-2 cursor-not-allowed">
+                <div></div>
+                <div class="bg-stone-950/90 w-full rounded-lg text-center py-1 border border-stone-800">
+                    <span class="block text-[11px] font-black text-stone-400">12. Patmos</span>
+                    <span class="block text-[8px] text-stone-500 font-bold">(Jan)</span>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal Seleksyon Mòd -->
+    <div id="lesson-menu-modal" class="fixed inset-0 bg-stone-950/90 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-stone-900 border border-amber-900/60 w-full max-w-sm rounded-3xl p-6 shadow-2xl flex flex-col space-y-4 relative">
+            <div class="flex justify-between items-center border-b border-stone-800 pb-3">
+                <h3 id="lesson-modal-title" class="text-base font-black title-font text-amber-400">Zòn</h3>
+                <button onclick="closeLessonMenu()" class="text-stone-400 hover:text-white font-bold text-lg cursor-pointer">✕</button>
+            </div>
+            <p class="text-xs text-stone-300 font-semibold text-center">Chwazi nivo difikilte oswa mòd ou vle teste pou zòn sa a:</p>
+            
+            <div class="space-y-2">
+                <button onclick="startLevelMode('fasil')" class="w-full py-2.5 px-4 bg-emerald-950 border border-emerald-600/60 text-emerald-300 font-black rounded-xl text-xs flex justify-between items-center cursor-pointer">
+                    <span>🟢 Nivo Fasil (QCM)</span>
+                    <span class="bg-emerald-900 px-2 py-0.5 rounded">+20 XP</span>
+                </button>
+                <button onclick="startLevelMode('difisil')" class="w-full py-2.5 px-4 bg-amber-950 border border-amber-600/60 text-amber-300 font-black rounded-xl text-xs flex justify-between items-center cursor-pointer">
+                    <span>🟡 Nivo Difisil (Mo Gaye & Intrus)</span>
+                    <span class="bg-amber-900 px-2 py-0.5 rounded">+30 XP</span>
+                </button>
+                <button onclick="startLevelMode('jeni')" class="w-full py-2.5 px-4 bg-red-950 border border-red-600/60 text-red-300 font-black rounded-xl text-xs flex justify-between items-center cursor-pointer">
+                    <span>🔴 Nivo Jeni (Kwonomèt 10s)</span>
+                    <span class="bg-red-900 px-2 py-0.5 rounded">+40 XP</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Quiz -->
+    <div id="quiz-modal" class="fixed inset-0 bg-stone-950/90 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-stone-900 border border-amber-900/60 w-full max-w-md rounded-3xl p-6 shadow-2xl flex flex-col space-y-4 relative">
+            <div class="flex justify-between items-center border-b border-stone-800 pb-3">
+                <button onclick="returnToMainMenu()" class="bg-stone-800 text-amber-400 font-bold text-xs px-3 py-1.5 rounded-xl border border-stone-700 cursor-pointer">
+                    ← Retounen nan Meni
+                </button>
+                <span id="quiz-progress" class="text-xs font-bold text-stone-400">Kesyon 1/1</span>
+            </div>
+
+            <!-- Box Karaktè -->
+            <div id="active-character-box" class="flex items-center space-x-3 bg-stone-800/80 p-3 rounded-2xl border border-stone-700">
+                <div id="quiz-char-avatar" class="flex-shrink-0"></div>
+                <div>
+                    <span id="quiz-char-name" class="block font-black text-xs text-amber-400"></span>
+                    <span id="quiz-char-bubble" class="text-[11px] text-stone-300 font-semibold"></span>
+                </div>
+            </div>
+
+            <div id="timer-box" class="w-full bg-stone-800 h-2 rounded-full overflow-hidden hidden">
+                <div id="timer-bar" class="bg-red-500 h-full w-full transition-all duration-1000"></div>
+            </div>
+
+            <div id="quiz-subtitle" class="text-xs font-extrabold text-amber-500 uppercase tracking-wider"></div>
+            <div id="quiz-question" class="text-stone-100 font-bold text-sm min-h-[40px]"></div>
+            
+            <div id="quiz-options" class="flex flex-col space-y-2"></div>
+
+            <div class="pt-2">
+                <button id="verify-btn" onclick="verifyAnswer()" class="w-full py-3 bg-amber-500 hover:bg-amber-600 text-stone-950 font-black rounded-xl text-xs cursor-pointer shadow-lg hidden">
+                    Verifye Repons lan 🔍
+                </button>
+            </div>
+
+            <!-- POPUP TRASIZYON -->
+            <div id="transition-overlay" class="hidden rounded-2xl p-4 text-center border space-y-2 flex flex-col items-center justify-center">
+                <div id="trans-avatar-container" class="w-28 h-28 flex justify-center items-center"></div>
+                <div id="trans-title" class="font-black text-sm"></div>
+                <div id="trans-subtext" class="text-xs text-stone-300 font-semibold"></div>
+                <div class="text-[10px] text-stone-400 font-bold mt-1">Pwochen aksyon nan <span id="countdown-num" class="text-amber-400 text-xs">3</span>s...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Boutik Modal -->
+    <div id="shop-modal" class="fixed inset-0 bg-stone-950/85 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-stone-900 border border-amber-900/55 w-full max-w-sm rounded-3xl p-6 shadow-2xl text-center space-y-4">
+            <div class="text-5xl">❤️</div>
+            <h3 class="text-xl font-black title-font text-red-400">Boutik Kè</h3>
+            <p class="text-stone-300 text-xs">Ranpli tout Kè ou yo pou sèlman 25 Jèm (💎)!</p>
+            <button onclick="buyHearts()" class="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white font-black rounded-xl text-xs cursor-pointer">Achte 3 Kè (25 💎)</button>
+            <button onclick="closeShopModal()" class="w-full py-2 bg-stone-800 text-stone-300 font-bold rounded-xl text-xs cursor-pointer">Fèmen</button>
+        </div>
+    </div>
+
+    <script>
+        const zoneNames = {
+            1: "Bèthléem (Matye)", 2: "Galilée (Mak)", 3: "Nazarèt (Lik)", 4: "Jerizalèm (Jan)",
+            5: "Kapènawoum (Matye)", 6: "Bètani (Mak)", 7: "Jeriko (Lik)", 8: "Kana (Jan)",
+            9: "Tòb (Matye)", 10: "Emis (Mak)", 11: "Samari (Lik)", 12: "Patmos (Jan)"
+        };
+
+        const shortNames = {
+            1: "Bèthléem", 2: "Galilée", 3: "Nazarèt", 4: "Jerizalèm",
+            5: "Kapènawoum", 6: "Bètani", 7: "Jeriko", 8: "Kana",
+            9: "Tòb", 10: "Emis", 11: "Samari", 12: "Patmos"
+        };
+
+        const sources = {
+            1: "Matye", 2: "Mak", 3: "Lik", 4: "Jan",
+            5: "Matye", 6: "Mak", 7: "Lik", 8: "Jan",
+            9: "Matye", 10: "Mak", 11: "Lik", 12: "Jan"
+        };
+
+        const cityAerialImages = {
+            1: "https://images.unsplash.com/photo-1548013146-72479768bada?q=80&w=400&auto=format&fit=crop",
+            2: "https://images.unsplash.com/photo-1509316975850-ff9c5deb0cd9?q=80&w=400&auto=format&fit=crop",
+            3: "https://images.unsplash.com/photo-1509316975850-ff9c5deb0cd9?q=80&w=400&auto=format&fit=crop",
+            4: "https://images.unsplash.com/photo-1548013146-72479768bada?q=80&w=400&auto=format&fit=crop",
+            5: "https://images.unsplash.com/photo-1509316975850-ff9c5deb0cd9?q=80&w=400&auto=format&fit=crop",
+            6: "https://images.unsplash.com/photo-1548013146-72479768bada?q=80&w=400&auto=format&fit=crop",
+            7: "https://images.unsplash.com/photo-1509316975850-ff9c5deb0cd9?q=80&w=400&auto=format&fit=crop",
+            8: "https://images.unsplash.com/photo-1548013146-72479768bada?q=80&w=400&auto=format&fit=crop",
+            9: "https://images.unsplash.com/photo-1509316975850-ff9c5deb0cd9?q=80&w=400&auto=format&fit=crop",
+            10: "https://images.unsplash.com/photo-1548013146-72479768bada?q=80&w=400&auto=format&fit=crop",
+            11: "https://images.unsplash.com/photo-1509316975850-ff9c5deb0cd9?q=80&w=400&auto=format&fit=crop",
+            12: "https://images.unsplash.com/photo-1548013146-72479768bada?q=80&w=400&auto=format&fit=crop"
+        };
+
+        const biblicCharacters = {
+            gabriel: {
+                name: "Gabriel (Anj Mèsajè)",
+                bubble: "Mwen ankouraje w pou w kontinye vwayaj sa a ak lafwa!",
+                img: "https://media.giphy.com/media/26AHONQ79FdWZhAI0/giphy.gif"
+            }
+        };
+
+        let currentUsername = "";
+        let currentXP = 0;
+        let currentGems = 50;
+        let currentHearts = 3;
+        let maxUnlockedLesson = 1;
+        let userId = "user_" + Math.random().toString(36).substring(2, 9);
+        let activeLessonId = 1;
+        let activeMode = 'fasil';
+        let currentQueue = [];
+        let questionIndex = 0;
+        let timerInterval = null;
+        let transitionTimer = null;
+        let selectedOptionIndex = null;
+        let currentItemData = null;
+
+        // BANK KESYON ANRICHEN AK PLIS KESYON NIVO DIFISIL AK JENI
+        const fasilBank = [
+            { type: "qcm", q: "Selon Matye 6:33, kisa nou dwe chache an premye?", opts: ["Wayòm Bondye a ak Jistis li", "Gwo richès ak otorite", "Lwanj nan men lèzòm", "Lavi san okenn eprèv"], correct: 0 },
+            { type: "qcm", q: "Nan Efezyen 6:14, kisa ki sèvi tankou 'Senti' nan zam Bondye yo?", opts: ["Verite a", "Lafwa a", "Lapè a", "Lesperans lan"], correct: 0 },
+            { type: "qcm", q: "Kouman yo rele mòn kote Jezi te bay diskou sou beye yo nan Matye 5?", opts: ["Mòn Sèmon an (Mòn Beati yo)", "Mòn Sinayi", "Mòn Olivèt", "Mòn Karmèl"], correct: 0 },
+            { type: "qcm", q: "Nan Efezyen 2:8, kouman nou sove?", opts: ["Pa lagras, atravè lafwa", "Pa bon zak nou fèt yo sèlman", "Atravè richès nou genyen", "Paske nou se bon moun"], correct: 0 }
+        ];
+
+        const difisilBank = [
+            { type: "wordScramble", q: "Ranje mo sa yo pou fòme yon vèsè nan Efezyen 6:10:", words: ["fò", "nan", "Sèyè", "a", "soti"], correctText: "soti fò nan Sèyè a" },
+            { type: "wordScramble", q: "Ranje mo sa yo selon Matye 5:14:", words: ["Limyè", "se", "moun", "nou", "tè a"], correctText: "nou se Limyè moun tè a" },
+            { type: "oddOneOut", q: "Jwenn intrus ki PA fè pati Zàm Bondye yo nan Efezyen 6:", opts: ["Boukliye Lafwa", "Kask Sali", "Baton Moyiz", "Epe Lespri"], correct: 2 },
+            { type: "wordScramble", q: "Ranje mo sa yo daprè Efezyen 4:32:", words: ["youn", "Kè sansib", "genyen", "pou", "lòt"], correctText: "genyen Kè sansib pou youn lòt" },
+            { type: "oddOneOut", q: "Jwenn intrus nan fwi Lespri a selon Galat 5 / Efezyen 5:", opts: ["Lajwa", "Lapè", "Jalouzi", "Dousè"], correct: 2 }
+        ];
+
+        const jeniBank = [
+            { type: "timedDirect", q: "[10s] Nan Efezyen 4:5, konbyen Senyè, lafwa, ak batèm ki genyen?", opts: ["Yon sèl Senyè, yon lafwa, yon batèm", "De Senyè ak twa batèm", "Miltip lafwa ak diferan Senyè", "Pa gen okenn limit"], correct: 0 },
+            { type: "timedDirect", q: "[10s] Ki evanjil ki kòmanse ak: 'Nan konmansman, Pawòl la te la'?", opts: ["Evanjil selon Jan", "Evanjil selon Matye", "Evanjil selon Mak", "Evanjil selon Lik"], correct: 0 },
+            { type: "timedDirect", q: "[10s] Nan Matye 28:19, nan non ki moun Jezi te mande pou yo batize moun yo?", opts: ["Papa a, Pitit la ak Sentespri a", "Apot yo sèlman", "Mwaz ak Eli", "Ango yo"], correct: 0 },
+            { type: "timedDirect", q: "[10s] Ki zam nan Efezyen 6 ki reprezante 'Pawòl Bondye a'?", opts: ["Epe Lespri a", "Boukliye Lafwa a", "Kask Sali a", "Senti Verite a"], correct: 0 }
+        ];
+
+        function shuffleArray(array) {
+            let arr = [...array];
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+            return arr;
+        }
+
+        function handleLogin() {
+            const input = document.getElementById('username-input');
+            const name = input ? input.value.trim() : "";
+            currentUsername = name || "Itilizatè";
+            document.getElementById('display-username').innerText = currentUsername;
+            document.getElementById('login-screen').classList.add('hidden');
+            initPresence();
+            updateMapUI();
+        }
+
+        function initPresence() {
+            if(!window.isFirebaseReady) return;
+            const userRef = window.FB_Ref(window.FB_DB, 'users/' + userId);
+            window.FB_Set(userRef, { username: currentUsername, xp: currentXP, maxLesson: maxUnlockedLesson, lastActive: Date.now() });
+            window.addEventListener('beforeunload', () => window.FB_Set(userRef, null));
+
+            window.FB_OnValue(window.FB_Ref(window.FB_DB, 'users'), (snapshot) => {
+                const data = snapshot.val();
+                const container = document.getElementById('online-players-container');
+                if(!container || !data) return;
+                let html = '';
+                Object.values(data).forEach(u => {
+                    if(Date.now() - u.lastActive < 180000) {
+                        html += `<span class="bg-stone-800 text-emerald-400 px-2 py-0.5 rounded text-[10px] font-bold">🟢 ${u.username} (${u.xp} XP)</span>`;
+                    }
+                });
+                container.innerHTML = html || '<span class="text-stone-500">Ou menm sèl</span>';
+            });
+        }
+
+        function updateFirebaseProgress() {
+            if(!window.isFirebaseReady) return;
+            window.FB_Update(window.FB_Ref(window.FB_DB, 'users/' + userId), { xp: currentXP, maxLesson: maxUnlockedLesson, lastActive: Date.now() });
+        }
+
+        function handleLogout() { location.reload(); }
+
+        function openLessonModal(lessonId) {
+            if(lessonId > maxUnlockedLesson) {
+                alert("🔒 Zòn sa a bloke! Ou dwe fini zòn anvan yo an premye.");
+                return;
+            }
+            activeLessonId = lessonId;
+            document.getElementById('lesson-modal-title').innerText = `Zòn ${lessonId}: ${zoneNames[lessonId]}`;
+            document.getElementById('lesson-menu-modal').classList.remove('hidden');
+        }
+
+        function closeLessonMenu() {
+            document.getElementById('lesson-menu-modal').classList.add('hidden');
+        }
+
+        function startLevelMode(mode) {
+            activeMode = mode;
+            closeLessonMenu();
+            if(currentHearts <= 0) { openShopModal(); return; }
+
+            if(mode === 'fasil') currentQueue = shuffleArray(fasilBank);
+            else if(mode === 'difisil') currentQueue = shuffleArray(difisilBank);
+            else if(mode === 'jeni') currentQueue = shuffleArray(jeniBank);
+
+            questionIndex = 0;
+            document.getElementById('quiz-modal').classList.remove('hidden');
+            loadQuestion();
+        }
+
+        function returnToMainMenu() {
+            if(timerInterval) clearInterval(timerInterval);
+            if(transitionTimer) clearInterval(transitionTimer);
+            document.getElementById('quiz-modal').classList.add('hidden');
+        }
+
+        function loadQuestion() {
+            if(timerInterval) clearInterval(timerInterval);
+            if(transitionTimer) clearInterval(transitionTimer);
+
+            document.getElementById('transition-overlay').classList.add('hidden');
+            document.getElementById('quiz-options').classList.remove('hidden');
+            document.getElementById('quiz-question').classList.remove('hidden');
+
+            if(questionIndex >= currentQueue.length) {
+                alert(`Felisitasyon ${currentUsername}! Ou fini Zòn ${activeLessonId} ak siksè!`);
+                currentXP += 50;
+                document.getElementById('xp-count').innerText = currentXP;
+                
+                if(activeLessonId >= maxUnlockedLesson && maxUnlockedLesson < 12) {
+                    maxUnlockedLesson++;
+                    updateMapUI();
+                }
+                updateFirebaseProgress();
+                returnToMainMenu();
+                return;
+            }
+
+            currentItemData = currentQueue[questionIndex];
+            selectedOptionIndex = null;
+
+            const currentChar = biblicCharacters.gabriel;
+
+            document.getElementById('quiz-char-avatar').innerHTML = `<img src="${currentChar.img}" class="w-14 h-14 object-contain rounded-full border-2 border-amber-400 p-0.5 shadow-lg gif-animated" alt="${currentChar.name}">`;
+            document.getElementById('quiz-char-name').innerText = currentChar.name;
+            document.getElementById('quiz-char-bubble').innerText = currentChar.bubble;
+
+            document.getElementById('quiz-progress').innerText = `Kesyon ${questionIndex + 1}/${currentQueue.length}`;
+            document.getElementById('quiz-question').innerText = currentItemData.q;
+            document.getElementById('quiz-subtitle').innerText = `${zoneNames[activeLessonId]} - Mòd ${activeMode.toUpperCase()}`;
+
+            const optionsBox = document.getElementById('quiz-options');
+            optionsBox.innerHTML = '';
+            document.getElementById('verify-btn').classList.add('hidden');
+
+            const timerBox = document.getElementById('timer-box');
+            if(activeMode === 'jeni') {
+                timerBox.classList.remove('hidden');
+                startTimer();
+            } else {
+                timerBox.classList.add('hidden');
+            }
+
+            if(currentItemData.type === 'qcm' || currentItemData.type === 'oddOneOut' || currentItemData.type === 'timedDirect') {
+                currentItemData.opts.forEach((opt, idx) => {
+                    const btn = document.createElement('button');
+                    btn.className = "w-full text-left p-3 rounded-xl bg-stone-800 hover:bg-stone-700 border border-stone-700 font-bold text-xs text-stone-200 cursor-pointer transition-all";
+                    btn.innerText = opt;
+                    btn.onclick = () => {
+                        document.querySelectorAll('#quiz-options button').forEach(b => b.classList.remove('option-selected'));
+                        btn.classList.add('option-selected');
+                        selectedOptionIndex = idx;
+                        document.getElementById('verify-btn').classList.remove('hidden');
+                    };
+                    optionsBox.appendChild(btn);
+                });
+            } else if(currentItemData.type === 'wordScramble') {
+                const scrambled = shuffleArray(currentItemData.words);
+                let selectedWords = [];
+                
+                const dropArea = document.createElement('div');
+                dropArea.className = "p-3 bg-stone-950 border border-amber-600/50 rounded-xl text-amber-300 font-bold text-xs mb-2";
+                dropArea.innerText = "Klike sou mo yo nan bon lòd...";
+                optionsBox.appendChild(dropArea);
+
+                const wordContainer = document.createElement('div');
+                wordContainer.className = "flex flex-wrap gap-2";
+                scrambled.forEach(w => {
+                    const wBtn = document.createElement('button');
+                    wBtn.className = "px-3 py-1.5 bg-stone-800 hover:bg-stone-700 border border-stone-600 rounded-lg text-xs font-bold text-stone-200 cursor-pointer";
+                    wBtn.innerText = w;
+                    wBtn.onclick = () => {
+                        selectedWords.push(w);
+                        wBtn.disabled = true;
+                        wBtn.classList.add('opacity-40');
+                        dropArea.innerText = selectedWords.join(" ");
+                        selectedOptionIndex = selectedWords.join(" ");
+                        if(selectedWords.length === currentItemData.words.length) {
+                            document.getElementById('verify-btn').classList.remove('hidden');
+                        }
+                    };
+                    wordContainer.appendChild(wBtn);
+                });
+                optionsBox.appendChild(wordContainer);
+            }
+        }
+
+        function updateMapUI() {
+            for(let i = 1; i <= 12; i++) {
+                const btn = document.getElementById(`node-${i}-btn`);
+                if(!btn) continue;
+                const bgImg = cityAerialImages[i];
+                if(i <= maxUnlockedLesson) {
+                    btn.className = "city-card-unlocked relative w-40 h-28 rounded-2xl flex flex-col items-center justify-between p-2 cursor-pointer";
+                    btn.style.backgroundImage = `linear-gradient(to bottom, rgba(0,0,0,0.3), rgba(0,0,0,0.85)), url('${bgImg}')`;
+                    btn.innerHTML = `
+                        <div class="absolute -top-6 text-red-500 text-2xl google-pin">📍</div>
+                        <div class="bg-stone-900/80 backdrop-blur-sm px-2 py-0.5 rounded-full border border-amber-500 text-[9px] font-black text-amber-300">Zòn ${i}</div>
+                        <div class="bg-stone-950/90 w-full rounded-lg text-center py-1 border border-amber-600/50">
+                            <span class="block text-[11px] font-black text-amber-300">${i}. ${shortNames[i]}</span>
+                            <span class="block text-[8px] text-stone-400 font-bold">(${sources[i]})</span>
+                        </div>
+                    `;
+                } else {
+                    btn.className = "city-card-locked relative w-40 h-28 rounded-2xl flex flex-col items-center justify-between p-2 cursor-not-allowed";
+                    btn.style.backgroundImage = `linear-gradient(to bottom, rgba(0,0,0,0.7), rgba(0,0,0,0.95)), url('${bgImg}')`;
+                    btn.innerHTML = `
+                        <div></div>
+                        <div class="bg-stone-950/90 w-full rounded-lg text-center py-1 border border-stone-800">
+                            <span class="block text-[11px] font-black text-stone-400">${i}. ${shortNames[i]}</span>
+                            <span class="block text-[8px] text-stone-500 font-bold">(${sources[i]})</span>
+                        </div>
+                    `;
+                }
+            }
+        }
+
+        function startTimer() {
+            const bar = document.getElementById('timer-bar');
+            let timeLeft = 10;
+            bar.style.width = "100%";
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                bar.style.width = (timeLeft * 10) + "%";
+                if(timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    showFeedback(false);
+                }
+            }, 1000);
+        }
+
+        function verifyAnswer() {
+            if(timerInterval) clearInterval(timerInterval);
+            if(selectedOptionIndex === null) { alert("Tanpri chwazi yon repons anvan w verifye!"); return; }
+
+            let isCorrect = false;
+            if(currentItemData.type === 'wordScramble') {
+                isCorrect = (selectedOptionIndex === currentItemData.correctText);
+            } else {
+                isCorrect = (selectedOptionIndex === currentItemData.correct);
+            }
+
+            showFeedback(isCorrect);
+        }
+
+        function showFeedback(isCorrect) {
+            document.getElementById('verify-btn').classList.add('hidden');
+            document.getElementById('quiz-options').classList.add('hidden');
+            document.getElementById('quiz-question').classList.add('hidden');
+
+            const overlay = document.getElementById('transition-overlay');
+            const avatarContainer = document.getElementById('trans-avatar-container');
+            const transTitle = document.getElementById('trans-title');
+            const transSubtext = document.getElementById('trans-subtext');
+            const countdownEl = document.getElementById('countdown-num');
+
+            overlay.classList.remove('hidden');
+
+            // PENALITE LÈ L RATE PREMYE KESYON NAN DIFISIL OSWA JENI
+            const isFirstQuestionInHard = (questionIndex === 0 && (activeMode === 'difisil' || activeMode === 'jeni'));
+
+            if(isCorrect) {
+                overlay.className = "rounded-2xl p-4 text-center border space-y-2 flex flex-col items-center justify-center bg-emerald-950/90 border-emerald-500/80 text-emerald-200";
+                avatarContainer.innerHTML = `<img src="https://media.giphy.com/media/xT5LMGfHzAmXmVDtdu/giphy.gif" class="w-28 h-28 object-contain gif-animated" alt="Byen Reponn">`;
+                transTitle.innerText = `Eksalan! Ou jwenn bon repons lan! 🎉`;
+                transSubtext.innerText = `Wayòm nan ap selebre avèk ou!`;
+                
+                currentXP += 10;
+                document.getElementById('xp-count').innerText = currentXP;
+                updateFirebaseProgress();
+            } else {
+                overlay.className = "rounded-2xl p-4 text-center border space-y-2 flex flex-col items-center justify-center bg-red-950/90 border-red-500/80 text-red-200";
+                avatarContainer.innerHTML = `<img src="https://media.giphy.com/media/OPU6wzx8JrHna/giphy.gif" class="w-28 h-28 object-contain gif-animated" alt="Mal Reponn">`;
+                
+                if(isFirstQuestionInHard) {
+                    transTitle.innerText = `🚫 ERÈ NAN PREMYE KESYON NIVO ${activeMode.toUpperCase()}!`;
+                    transSubtext.innerText = `Ou pa jwenn aksè pou w moute sou lòt nivo yo! Aplikasyon an ap voye w retounen nan Meni an.`;
+                } else {
+                    transTitle.innerText = `O pa bon! Se yon erè... 😔`;
+                    transSubtext.innerText = `Pran kouraj, eseye ankò nan pwochen kesyon an!`;
+                }
+
+                currentHearts = Math.max(0, currentHearts - 1);
+                document.getElementById('hearts-count').innerText = currentHearts;
+            }
+
+            let count = 3;
+            countdownEl.innerText = count;
+
+            transitionTimer = setInterval(() => {
+                count--;
+                countdownEl.innerText = count;
+                if(count <= 0) {
+                    clearInterval(transitionTimer);
+                    
+                    // SI W RATE PREMYE KESYON DIFISIL OSWA JENI OWA W PÈDI TOUT KÈ: VOYE L RETOUNEN NAN MENI DEYÈ NÈT
+                    if((!isCorrect && isFirstQuestionInHard) || currentHearts <= 0) {
+                        returnToMainMenu();
+                    } else {
+                        questionIndex++;
+                        loadQuestion();
+                    }
+                }
+            }, 1000);
+        }
+
+        function openShopModal() { document.getElementById('shop-modal').classList.remove('hidden'); }
+        function closeShopModal() { document.getElementById('shop-modal').classList.add('hidden'); }
+        function buyHearts() {
+            if(currentGems >= 25) {
+                currentGems -= 25;
+                currentHearts = 3;
+                document.getElementById('gems-count').innerText = currentGems;
+                document.getElementById('hearts-count').innerText = currentHearts;
+                closeShopModal();
+                alert("Ou achte 3 kè ak siksè!");
+            } else {
+                alert("Ou pa gen ase jèm (💎)!");
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            updateMapUI();
+        });
+    </script>
+</body>
+</html>
