@@ -4,6 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ann al chache Wayòm nan - Viv entansyonèlman Wayòm nan</title>
+    
+    <!-- Liy Manifest pou PWA a -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#d97706">
+
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;900&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
     
@@ -396,7 +401,6 @@
         let selectedOptionIndex = null;
         let currentItemData = null;
 
-        // BANK KESYON ANRICHEN AK PLIS KESYON NIVO DIFISIL AK JENI
         const fasilBank = [
             { type: "qcm", q: "Selon Matye 6:33, kisa nou dwe chache an premye?", opts: ["Wayòm Bondye a ak Jistis li", "Gwo richès ak otorite", "Lwanj nan men lèzòm", "Lavi san okenn eprèv"], correct: 0 },
             { type: "qcm", q: "Nan Efezyen 6:14, kisa ki sèvi tankou 'Senti' nan zam Bondye yo?", opts: ["Verite a", "Lafwa a", "Lapè a", "Lesperans lan"], correct: 0 },
@@ -661,7 +665,6 @@
 
             overlay.classList.remove('hidden');
 
-            // PENALITE LÈ L RATE PREMYE KESYON NAN DIFISIL OSWA JENI
             const isFirstQuestionInHard = (questionIndex === 0 && (activeMode === 'difisil' || activeMode === 'jeni'));
 
             if(isCorrect) {
@@ -697,8 +700,6 @@
                 countdownEl.innerText = count;
                 if(count <= 0) {
                     clearInterval(transitionTimer);
-                    
-                    // SI W RATE PREMYE KESYON DIFISIL OSWA JENI OWA W PÈDI TOUT KÈ: VOYE L RETOUNEN NAN MENI DEYÈ NÈT
                     if((!isCorrect && isFirstQuestionInHard) || currentHearts <= 0) {
                         returnToMainMenu();
                     } else {
